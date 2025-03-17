@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  whatsapp-api:
+    image: wppconnect/server-cli:latest
+    container_name: whatsapp-api
+    ports:
+      - "21465:21465"
+    environment:
+      - PORT=21465
+    volumes:
+      - ./wppconnect-data:/usr/src/app/session
+    command: [ "--secretKey", "${SECRET_KEY}" ]
+    networks:
+      - app_network
+    tty: true
+
+
+  flask-app:
+    build: .
+    container_name: flask-app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - whatsapp-api
+    env_file:
+      - .env
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
