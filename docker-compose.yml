@@ -4,13 +4,20 @@ services:
   whatsapp-api:
     image: wppconnect/server-cli:latest
     container_name: whatsapp-api
+    restart: always
     ports:
       - "21465:21465"
     environment:
       - PORT=21465
+      - SECRET_KEY=${SECRET_KEY}
     volumes:
       - ./wppconnect-data:/usr/src/app/session
-    command: [ "--secretKey", "${SECRET_KEY}" ]
+    command:
+      - --secretKey=${SECRET_KEY}
+      - --startAllSession
+      - --webhook-url=http://flask-app:5000/webhook
+      - --webhook-autoDownload
+      - --webhook-readMessage
     networks:
       - app_network
     tty: true
@@ -18,6 +25,7 @@ services:
 
   flask-app:
     build: .
+    command: gunicorn -w 4 -b 0.0.0.0:5000 bot:app --log-level debug --access-logfile -
     container_name: flask-app
     ports:
       - "5000:5000"
