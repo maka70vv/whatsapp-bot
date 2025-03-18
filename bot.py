@@ -28,7 +28,8 @@ def process_webhook(data):
             sender = data.get("sender", {}).get("pushname", "Unknown")
             sender_num = data.get("from")
             print(f"Сообщение от {sender}: {message_text}")
-            send_message(sender_num, message_text)
+            message_text_to_send = f"{sender_num} : {message_text}"
+            send_message(SUPPORT_GROUP_ID, message_text_to_send)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
