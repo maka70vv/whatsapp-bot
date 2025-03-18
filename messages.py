@@ -36,13 +36,14 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     if sender != config.SUPPORT_GROUP_ID:
-        if message_text != "0":
-            send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
-        else:
-            close_chat(sender)
+        send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+
     else:
         customer_number, message_text = process_operator_answer(message_text)
-        send_message(customer_number, message_text)
+        if message_text != "0":
+            send_message(customer_number, message_text)
+        else:
+            close_chat(customer_number)
 
 
 def process_operator_answer(text):
