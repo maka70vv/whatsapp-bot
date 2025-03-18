@@ -2,3 +2,5 @@
 wppconnect-data
 .idea
 .venv
+initial_data.py
+*.db
