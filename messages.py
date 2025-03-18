@@ -3,6 +3,7 @@ import os
 import re
 import requests
 import config
+from chats import close_chat
 
 
 def send_message(to, text):
@@ -35,7 +36,10 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     if sender != config.SUPPORT_GROUP_ID:
-        send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+        if message_text != "0":
+            send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+        else:
+            close_chat(sender)
     else:
         customer_number, message_text = process_operator_answer(message_text)
         send_message(customer_number, message_text)

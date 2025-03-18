@@ -4,6 +4,7 @@ import threading
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 
+from chats import check_chat_status, open_chat
 from messages import process_message_sending
 
 app = Flask(__name__)
@@ -18,6 +19,10 @@ def process_webhook(data):
             message_text = data.get("body") or data.get("content")
             sender = data.get("sender", {}).get("pushname", "Unknown")
             sender_num = data.get("from")
+
+            if not check_chat_status(sender_num):
+                open_chat(sender_num)
+
             process_message_sending(sender_num, message_text)
 
 

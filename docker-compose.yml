@@ -22,7 +22,6 @@ services:
       - app_network
     tty: true
 
-
   flask-app:
     build: .
     command: gunicorn -w 4 -b 0.0.0.0:5000 bot:app --log-level debug --access-logfile -
@@ -31,8 +30,17 @@ services:
       - "5000:5000"
     depends_on:
       - whatsapp-api
+      - redis
     env_file:
       - .env
+    networks:
+      - app_network
+
+  redis:
+    image: redis:alpine
+    restart: always
+    expose:
+      - 6379
     networks:
       - app_network
 
