@@ -38,14 +38,14 @@ def webhook():
     return jsonify({"status": "success"}), 200
 
 
-def send_message(to, text):
+def send_message_to_operators(to, text):
     print("📨 Sending message...")
 
     url = f"{OPENWA_API_URL}/{SESSION_NAME}/send-message"
 
     payload = {
         "phone": to,
-        "isGroup": False,
+        "isGroup": True,
         "isNewsletter": False,
         "isLid": False,
         "message": text
