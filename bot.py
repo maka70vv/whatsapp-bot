@@ -37,18 +37,19 @@ def webhook():
     return jsonify({"status": "success"}), 200
 
 
-# Функция отправки сообщений
 def send_message(to, text):
-    print("sending message func")
+    print("📨 Sending message...")
+
     url = f"{OPENWA_API_URL}/{SESSION_NAME}/send-message"
-    print(url)
+
     payload = {
-      "phone": to,
-      "isGroup": False,
-      "isNewsletter": False,
-      "isLid": False,
-      "message": "Hi from WPPConnect"
-    }
+        "phone": to,
+        "isGroup": False,
+        "isNewsletter": False,
+        "isLid": False,
+        "message": text
+        }
+
 
     headers = {
         "Content-Type": "application/json",
@@ -57,14 +58,18 @@ def send_message(to, text):
 
     print(f"📤 Запрос к API: {url}")
     print(f"📦 Данные запроса: {json.dumps(payload, indent=2)}")
+    print(f"📜 Заголовки запроса: {headers}")
 
     try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)  # Устанавливаем таймаут
+        response = requests.post(url, json=payload, headers=headers)
         print(f"🔍 Ответ API: {response.status_code}, {response.text}")
+
+        # Если API вернул ошибку, логируем
+        if response.status_code != 200:
+            print(f"⚠️ Ошибка API: {response.json()}")
+
     except requests.exceptions.RequestException as e:
         print(f"❌ Ошибка запроса: {e}")
-
-    return response
 
 
 if __name__ == '__main__':
