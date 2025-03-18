@@ -1,4 +1,5 @@
 import json
+import re
 
 from dotenv import load_dotenv
 import os
@@ -16,20 +17,18 @@ SUPPORT_GROUP_ID = os.getenv("SUPPORT_GROUP_ID")
 
 app = Flask(__name__)
 
+
 def process_webhook(data):
     print(f"Обработка сообщения: {data}")
 
     if data:
-        print("Request:", data)  # Выводим все полученные данные
-
         # Извлекаем текст сообщения, если это событие "onmessage"
         if data.get("event") == "onmessage":
             message_text = data.get("body") or data.get("content")
             sender = data.get("sender", {}).get("pushname", "Unknown")
             sender_num = data.get("from")
-            print(f"Сообщение от {sender}: {message_text}")
-            message_text_to_send = f"{sender_num} : {message_text}"
-            send_message_to_operators(SUPPORT_GROUP_ID, message_text_to_send)
+            process_message_sending(sender_num, message_text)
+
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -38,19 +37,18 @@ def webhook():
     return jsonify({"status": "success"}), 200
 
 
-def send_message_to_operators(to, text):
+def send_message(to, text):
     print("📨 Sending message...")
 
     url = f"{OPENWA_API_URL}/{SESSION_NAME}/send-message"
 
     payload = {
         "phone": to,
-        "isGroup": True,
+        "isGroup": False if to.endswith("@c.us") else True,
         "isNewsletter": False,
         "isLid": False,
         "message": text
-        }
-
+    }
 
     headers = {
         "Content-Type": "application/json",
@@ -59,19 +57,35 @@ def send_message_to_operators(to, text):
 
     print(f"📤 Запрос к API: {url}")
     print(f"📦 Данные запроса: {json.dumps(payload, indent=2)}")
-    print(f"📜 Заголовки запроса: {headers}")
 
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        print(f"🔍 Ответ API: {response.status_code}, {response.text}")
-
-        # Если API вернул ошибку, логируем
-        if response.status_code != 200:
-            print(f"⚠️ Ошибка API: {response.json()}")
+        requests.post(url, json=payload, headers=headers)
+        return
 
     except requests.exceptions.RequestException as e:
         print(f"❌ Ошибка запроса: {e}")
+        return
+
+
+def process_message_sending(sender, message_text):
+    if sender != SUPPORT_GROUP_ID:
+        send_message(SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+    else:
+        customer_number, message_text = process_operator_answer(message_text)
+        send_message(customer_number, message_text)
+
+
+def process_operator_answer(text):
+    pattern = r"(\b\d+@(?:c|g)\.us\b)"
+    match = re.search(pattern, text)
+
+    if match:
+        extracted_object = match.group(0)
+        cleaned_text = text.replace(extracted_object, "").strip(" -:\n")
+        return extracted_object, cleaned_text
+
+    return None, text.strip()
 
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000, debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5000, debug=bool(os.getenv("DEBUG", default=False)), threaded=True)
