@@ -1,6 +1,6 @@
 from config import redis_client
 
-WELCOME_MESSAGE = "Добро пожаловать! Чем могу помочь?"
+WELCOME_MESSAGE = "Здравствуйте! Нажмите 1 ..... Нажмите 2....... Напишите оператор ......."
 
 def open_chat(chat_id):
     from messages import send_message

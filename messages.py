@@ -4,6 +4,7 @@ import re
 import requests
 import config
 from chats import close_chat
+from db import get_auto_reply_options
 
 
 def send_message(to, text):
@@ -36,7 +37,10 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     if sender != config.SUPPORT_GROUP_ID:
-        send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+        if message_text.lower() == "оператор":
+            send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+        elif get_auto_reply_options(message_text):
+            send_message(sender, get_auto_reply_options(message_text))
 
     else:
         customer_number, message_text = process_operator_answer(message_text)
