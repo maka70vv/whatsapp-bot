@@ -120,25 +120,6 @@ def add_operator_contact(name, contact):
     conn.close()
 
 
-def get_operator_contact(current_state):
-    """Возвращает контакт оператора по текущему состоянию"""
-    conn = sqlite3.connect(config.DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT oc.contact
-        FROM auto_replies ar
-        JOIN operator_chats oc ON ar.operator_contact_name = oc.name
-        WHERE ar.current_state = ?
-    """, (current_state,))
-
-    result = cursor.fetchone()
-    conn.close()
-
-    return result[0][0] if result else None
-
-
-
 def sender_is_operator_contact(sender):
     """Проверяет является ли отправитель оператором"""
     conn = sqlite3.connect(config.DB_PATH)

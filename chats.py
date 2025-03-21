@@ -10,10 +10,11 @@ def open_chat(chat_id):
         send_message(chat_id, WELCOME_MESSAGE)
 
 def switch_to_operator(chat_id):
-    redis_client.set(chat_id, "operator")
+    redis_client.set(f"{chat_id}_operator", "true")
 
 def close_chat(chat_id):
     redis_client.delete(chat_id)
+    redis_client.delete(f"{chat_id}_operator")
 
 def check_chat_status(chat_id):
     return redis_client.exists(chat_id)

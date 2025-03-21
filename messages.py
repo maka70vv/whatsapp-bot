@@ -9,6 +9,7 @@ from db import get_auto_reply_options, get_operator_contact, sender_is_operator_
 
 
 def send_message(to, text):
+    print("sending message")
     url = f"{config.OPENWA_API_URL}/{config.SESSION_NAME}/send-message"
 
     payload = {
@@ -18,6 +19,7 @@ def send_message(to, text):
         "isLid": False,
         "message": text
     }
+    print(payload)
 
     headers = {
         "Content-Type": "application/json",
@@ -35,24 +37,21 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     current_state = config.redis_client.get(sender)
-    print(current_state)
     if not sender_is_operator_contact(sender):
-        if message_text.lower() == "оператор":
+        if config.redis_client.get(f"{sender}_operator") == "true":
+            operator_contact = get_operator_contact(current_state)
+            send_message(operator_contact, f"{sender}\n {message_text}")
+        elif message_text.lower() == "оператор":
             send_message(sender, "Пожалуйста, напишите Ваше сообщение! Первый освободившийся оператор ответит Вам!")
             switch_to_operator(sender)
         elif get_auto_reply_options(current_state):
-            print("getting auto-reply options")
             next_state = get_next_state(message_text, current_state)
             if next_state:
                 config.redis_client.set(sender, next_state)
                 send_message(sender, get_auto_reply_options(next_state))
             else:
                 send_message(sender, "Следующее состояние не найдено.")
-        elif current_state == "operator":
-            operator_contact = get_operator_contact(current_state)
-            send_message(operator_contact, f"{sender}\n {message_text}")
         else:
-            print("no option")
             # Если нет вложенных опций — показать простой ответ
             response = get_auto_reply(message_text, current_state)
             if response:
