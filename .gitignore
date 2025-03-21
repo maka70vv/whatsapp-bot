@@ -4,3 +4,4 @@ wppconnect-data
 .venv
 initial_data.py
 *.db
+testing.py

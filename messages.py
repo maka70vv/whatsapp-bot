@@ -1,7 +1,8 @@
-import json
 import os
 import re
+
 import requests
+
 import config
 from chats import close_chat, switch_to_operator
 from db import get_auto_reply_options, get_operator_contact, sender_is_operator_contact
@@ -34,15 +35,15 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     current_state = config.redis_client.get(sender)
-    if sender != sender_is_operator_contact(sender):
+    if not sender_is_operator_contact(sender):
         if message_text.lower() == "оператор":
+            send_message(sender, "Пожалуйста, ожидайте! Первый освободившийся оператор ответит Вам!")
             switch_to_operator(sender, current_state)
         elif get_auto_reply_options(message_text):
             send_message(sender, get_auto_reply_options(message_text))
         elif "_operator" in current_state:
             operator_contact = get_operator_contact(current_state)[0]
-            send_message(operator_contact, message_text)
-
+            send_message(operator_contact, f"{sender}\n {message_text}")
 
     else:
         customer_number, message_text = process_operator_answer(message_text)

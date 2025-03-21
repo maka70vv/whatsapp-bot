@@ -1,7 +1,6 @@
 import os
 import threading
 
-from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 
 from chats import check_chat_status, open_chat
