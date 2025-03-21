@@ -41,8 +41,9 @@ def process_message_sending(sender, message_text):
             switch_to_operator(sender, current_state)
         elif get_auto_reply_options(message_text):
             send_message(sender, get_auto_reply_options(message_text))
+
         elif "_operator" in current_state:
-            operator_contact = get_operator_contact(current_state)[0]
+            operator_contact = get_operator_contact(current_state)
             send_message(operator_contact, f"{sender}\n {message_text}")
 
     else:
