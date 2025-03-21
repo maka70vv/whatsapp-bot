@@ -11,8 +11,6 @@ app = Flask(__name__)
 
 
 def process_webhook(data):
-    print(f"Обработка сообщения: {data}")
-
     if data:
         # Извлекаем текст сообщения, если это событие "onmessage"
         if data.get("event") == "onmessage":

@@ -3,8 +3,8 @@ import os
 import re
 import requests
 import config
-from chats import close_chat
-from db import get_auto_reply_options
+from chats import close_chat, switch_to_operator
+from db import get_auto_reply_options, get_operator_contact, sender_is_operator_contact
 
 
 def send_message(to, text):
@@ -23,9 +23,6 @@ def send_message(to, text):
         "Authorization": f"Bearer {os.getenv('OPENWA_API_TOKEN')}"
     }
 
-    print(f"📤 Запрос к API: {url}")
-    print(f"📦 Данные запроса: {json.dumps(payload, indent=2)}")
-
     try:
         requests.post(url, json=payload, headers=headers)
         return
@@ -36,11 +33,16 @@ def send_message(to, text):
 
 
 def process_message_sending(sender, message_text):
-    if sender != config.SUPPORT_GROUP_ID:
+    current_state = config.redis_client.get(sender)
+    if sender != sender_is_operator_contact(sender):
         if message_text.lower() == "оператор":
-            send_message(config.SUPPORT_GROUP_ID, f"{sender} \n {message_text}")
+            switch_to_operator(sender, current_state)
         elif get_auto_reply_options(message_text):
             send_message(sender, get_auto_reply_options(message_text))
+        elif "_operator" in current_state:
+            operator_contact = get_operator_contact(current_state)[0]
+            send_message(operator_contact, message_text)
+
 
     else:
         customer_number, message_text = process_operator_answer(message_text)
