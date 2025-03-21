@@ -49,8 +49,6 @@ def process_message_sending(sender, message_text):
             if next_state:
                 config.redis_client.set(sender, next_state)
                 send_message(sender, get_auto_reply_options(next_state))
-            else:
-                send_message(sender, "Следующее состояние не найдено.")
         else:
             # Если нет вложенных опций — показать простой ответ
             response = get_auto_reply(message_text, current_state)

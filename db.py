@@ -56,7 +56,10 @@ def get_auto_reply_options(current_state):
     conn.close()
 
     if options:
-        return "Выберите вариант:\n" + "\n".join([f"{opt[0]}️⃣ - {opt[1]}" for opt in options])
+        return "\n".join([
+            f"{opt[0]}️⃣ - {opt[1]}" if opt[0].strip() else opt[1]
+            for opt in options
+        ])
     return None
 
 

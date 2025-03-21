@@ -1,13 +1,13 @@
 from config import redis_client
 
-WELCOME_MESSAGE = "Здравствуйте! Нажмите 1 ..... Нажмите 2....... Напишите оператор ......."
 
 def open_chat(chat_id):
     from messages import send_message
+    from db import get_auto_reply_options
 
     if not redis_client.exists(chat_id):
         redis_client.set(chat_id, "root")
-        send_message(chat_id, WELCOME_MESSAGE)
+        send_message(chat_id, get_auto_reply_options("root"))
 
 def switch_to_operator(chat_id):
     redis_client.set(f"{chat_id}_operator", "true")
