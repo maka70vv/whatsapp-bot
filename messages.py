@@ -38,11 +38,10 @@ def process_message_sending(sender, message_text):
     print(current_state)
     if not sender_is_operator_contact(sender):
         if message_text.lower() == "оператор":
-            send_message(sender, "Пожалуйста, ожидайте! Первый освободившийся оператор ответит Вам!")
+            send_message(sender, "Пожалуйста, напишите Ваше сообщение! Первый освободившийся оператор ответит Вам!")
             switch_to_operator(sender)
-        elif get_auto_reply_options(message_text):
-            send_message(sender, get_auto_reply_options(message_text))
-        elif get_auto_reply_options(message_text):  # Вложенные опции есть
+        elif get_auto_reply_options(current_state):
+            print("getting auto-reply options")
             next_state = get_next_state(message_text, current_state)
             if next_state:
                 config.redis_client.set(sender, next_state)
@@ -53,6 +52,7 @@ def process_message_sending(sender, message_text):
             operator_contact = get_operator_contact(current_state)
             send_message(operator_contact, f"{sender}\n {message_text}")
         else:
+            print("no option")
             # Если нет вложенных опций — показать простой ответ
             response = get_auto_reply(message_text, current_state)
             if response:
