@@ -48,7 +48,7 @@ def add_auto_reply(keyword, response, current_state, operator_contact_name, next
 
 
 def get_auto_reply_options(current_state):
-    """Возвращает список вложенных вариантов"""
+    """Возвращает список вложенных вариантов из текущего состояния"""
     conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT keyword, response FROM auto_replies WHERE current_state = ?", (current_state,))
@@ -61,29 +61,48 @@ def get_auto_reply_options(current_state):
 
 
 def get_next_state(keyword, current_state):
+    """Получает next_state по ключу и текущему состоянию"""
     conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
         "SELECT next_state FROM auto_replies WHERE keyword = ? AND current_state = ?",
-        (keyword, current_state,),
+        (keyword, current_state),
     )
-    states = cursor.fetchall()
-
-    conn.close()
-
-    return states[0][0]
-
-
-def get_auto_reply(keyword):
-    """Возвращает сам ответ (если нет вложенных)"""
-    conn = sqlite3.connect(config.DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT response FROM auto_replies WHERE keyword = ?", (keyword,))
     result = cursor.fetchone()
     conn.close()
 
     return result[0] if result else None
+
+
+def get_auto_reply(keyword, current_state):
+    """Возвращает конкретный текст ответа по ключу и состоянию"""
+    conn = sqlite3.connect(config.DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT response FROM auto_replies WHERE keyword = ? AND current_state = ?", (keyword, current_state))
+    result = cursor.fetchone()
+    conn.close()
+
+    return result[0] if result else None
+
+
+def get_operator_contact(current_state):
+    """Возвращает контакт оператора по текущему состоянию (JOIN)"""
+    conn = sqlite3.connect(config.DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT oc.contact
+        FROM auto_replies ar
+        JOIN operator_chats oc ON ar.operator_contact_name = oc.name
+        WHERE ar.current_state = ?
+        LIMIT 1
+    """, (current_state,))
+
+    result = cursor.fetchone()
+    conn.close()
+
+    return result[0] if result else config.ROOT_OPERATORS_GROUP
 
 
 def add_operator_contact(name, contact):

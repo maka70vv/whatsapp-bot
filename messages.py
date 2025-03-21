@@ -5,7 +5,7 @@ import requests
 
 import config
 from chats import close_chat, switch_to_operator
-from db import get_auto_reply_options, get_operator_contact, sender_is_operator_contact
+from db import get_auto_reply_options, get_operator_contact, sender_is_operator_contact, get_auto_reply, get_next_state
 
 
 def send_message(to, text):
@@ -35,16 +35,30 @@ def send_message(to, text):
 
 def process_message_sending(sender, message_text):
     current_state = config.redis_client.get(sender)
+    print(current_state)
     if not sender_is_operator_contact(sender):
         if message_text.lower() == "оператор":
             send_message(sender, "Пожалуйста, ожидайте! Первый освободившийся оператор ответит Вам!")
-            switch_to_operator(sender, current_state)
+            switch_to_operator(sender)
         elif get_auto_reply_options(message_text):
             send_message(sender, get_auto_reply_options(message_text))
-
-        elif "_operator" in current_state:
+        elif get_auto_reply_options(message_text):  # Вложенные опции есть
+            next_state = get_next_state(message_text, current_state)
+            if next_state:
+                config.redis_client.set(sender, next_state)
+                send_message(sender, get_auto_reply_options(next_state))
+            else:
+                send_message(sender, "Следующее состояние не найдено.")
+        elif current_state == "operator":
             operator_contact = get_operator_contact(current_state)
             send_message(operator_contact, f"{sender}\n {message_text}")
+        else:
+            # Если нет вложенных опций — показать простой ответ
+            response = get_auto_reply(message_text, current_state)
+            if response:
+                send_message(sender, response)
+            else:
+                send_message(sender, "Неизвестная команда. Попробуйте снова.")
 
     else:
         customer_number, message_text = process_operator_answer(message_text)
