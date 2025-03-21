@@ -1,11 +1,11 @@
 import sqlite3
 
-DB_PATH = "auto_replies.db"
+import config
 
 
 def init_db():
     """Создает таблицу автоответов и номеров групп с операторами"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS auto_replies (
@@ -29,7 +29,7 @@ def init_db():
 
 def add_auto_reply(keyword, response, parent_keyword=None):
     """Добавляет автоответ в базу"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -44,7 +44,7 @@ def add_auto_reply(keyword, response, parent_keyword=None):
 
 def get_auto_reply_options(parent_keyword):
     """Возвращает список вложенных вариантов"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT keyword, response FROM auto_replies WHERE parent_keyword = ?", (parent_keyword,))
     options = cursor.fetchall()
@@ -57,7 +57,7 @@ def get_auto_reply_options(parent_keyword):
 
 def get_auto_reply(keyword):
     """Возвращает сам ответ (если нет вложенных)"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT response FROM auto_replies WHERE keyword = ?", (keyword,))
     result = cursor.fetchone()
@@ -68,7 +68,7 @@ def get_auto_reply(keyword):
 
 def add_operator_contact(name, contact):
     """Добавляет контакт оператора в базу"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
@@ -83,7 +83,7 @@ def add_operator_contact(name, contact):
 
 def get_operator_contact(name):
     """Возвращает контакт оператора"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT contact FROM operator_chats WHERE name = ?", (name,))
     contact = cursor.fetchall()
@@ -94,7 +94,7 @@ def get_operator_contact(name):
 
 def sender_is_operator_contact(sender):
     """Проверяет является ли отправитель оператором"""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(config.DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT contact FROM operator_chats")
     contact = cursor.fetchall()
